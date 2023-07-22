@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ctrler 绘画</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      color: #fff;
+      font-family: 'Open Sans', Helvetica, sans-serif;
+      box-sizing: border-box;
+    }
+
+    /* Assign grid instructions to our parent grid container, mobile-first (hide the sidenav) */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 50px 1fr;
+      grid-template-areas:
+        'header'
+        'main';
+      height: 100vh;
+    }
+
+    /* Styles for the Menu Icon */
+    .menu-icon {
+      position: fixed; /* Needs to stay visible for all mobile scrolling */
+      display: flex;
+      top: 5px;
+      left: 10px;
+      align-items: center;
+      justify-content: center;
+      background-color: #202123; /* Updated color */
+      border-radius: 50%;
+      z-index: 1;
+      cursor: pointer;
+      padding: 12px;
+    }
+
+    /* Styles for the Header */
+    .header {
+      grid-area: header;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      background-color: #202123; /* Updated color */
+    }
+
+    .header__search {
+      margin-left: 42px;
+    }
+
+    /* Styles for the Side Navigation */
+    .sidenav {
+      grid-area: sidenav;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 240px;
+      position: fixed;
+      overflow-y: auto;
+      transform: translateX(-245px);
+      transition: all .6s ease-in-out;
+      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.08);
+      z-index: 2; /* Needs to sit above the hamburger menu icon */
+      background-color: #202123; /* Updated color */
+    }
+
+    .sidenav.active {
+      transform: translateX(0);
+    }
+
+    .sidenav__close-icon {
+      position: absolute;
+      visibility: visible;
+      top: 8px;
+      right: 12px;
+      cursor: pointer;
+      font-size: 20px;
+      color: #ddd;
+    }
+
+    /* Styles for the Main Section */
+    .main {
+      grid-area: main;
+      background-color: #444654; /* Updated color */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Styles for the Form */
+    #form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      max-width: 400px;
+      padding: 20px;
+      margin-top: 50px; /* Add a 50px distance from the top */
+    }
+
+    #form input,
+    #form select,
+    #form button {
+      width: calc(100% - 20px); /* Subtract 20px from the width to have a 10px distance on both sides */
+      margin-bottom: 10px;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #form select[type="modelId"],
+    #form select[type="sd_version"],
+    #form select {
+      width: calc(100% ); /* Subtract 20px from the width to have a 10px distance on both sides */
+    }
+
+    #form button {
+      background-color: #000;
+      color: #fff;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    /* Styles for the Loading Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
+      display: none;
+      z-index: 9998; /* Below the loading spinner, but above other content */
+    }
+
+    /* Styles for the Loading Animation */
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      display: none; /* Initially hide the loading animation */
+    }
+
+    .loading .iconfont {
+      font-size: 40px;
+      animation: spin 2s linear infinite;
+    }
+
+    /* Non-mobile styles, 750px breakpoint */
+    @media only screen and (min-width: 46.875em) {
+      /* Show the sidenav */
+      .grid-container {
+        grid-template-columns: 240px 1fr;
+        grid-template-areas:
+          "sidenav header"
+          "sidenav main";
+      }
+
+      .header__search {
+        margin-left: 0;
+      }
+
+      .sidenav {
+        position: relative;
+        transform: translateX(0);
+      }
+
+      .sidenav__close-icon {
+        visibility: hidden;
+      }
+    }
+
+    /* Medium screens breakpoint (1050px) */
+    @media only screen and (min-width: 65.625em) {
+      /* Break out main cards into two columns */
+      .main-cards {
+        column-count: 2;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="grid-container">
+    <div class="menu-icon">
+      <i class="fas fa-bars header__menu"></i>
+    </div>
+
+    <header class="header">
+      <div class="header__search">扫描下方二维码关注公众号</div>
+      <div class="header__avatar">Ctrler</div>
+    </header>
+
+    <aside class="sidenav">
+      <div class="sidenav__close-icon">
+        <i class="fas fa-times sidenav__brand-close"></i>
+      </div>
+      <form id="form">
+        <label for="prompt">Prompt (required)</label>
+        <input name="prompt" id="prompt" placeholder="Enter the prompt" required>
+        
+        <label for="negative_prompt">Negative Prompt (optional)</label>
+        <input name="negative_prompt" id="negative_prompt" placeholder="Enter the negative prompt">
+
+        <label for="modelId">Model</label>
+        <select name="modelId" id="modelId">
+          <option value="ac614f96-1082-45bf-be9d-757f2d31c174">DreamShaper v7</option>
+          <option value="d69c8273-6b17-4a30-a13e-d6637ae1c644">3D Animation Style</option>
+          <option value="e316348f-7773-490e-adcd-46757c738eb7">Absolute Reality v1.6</option>
+          <option value="b820ea11-02bf-4652-97ae-9ac0cc00593d">Leonardo Diffusion</option>
+          <option value="458ecfff-f76c-402c-8b85-f09f6fb198de">Deliberate 1.1</option>
+          <option value="a097c2df-8f0c-4029-ae0f-8fd349055e61">RPG 4.0</option>
+          <option value="0161e8a7-7eed-4ff8-895c-02e764df8470">Luna</option>
+          <option value="7a65f0ab-64a7-4be2-bcf3-64a1cc56f627">Isometric Scifi Buildings</option>
+          <option value="fc42c4b3-1b19-44b7-b9fa-4d3d018af689">Ilustration V2</option>
+          <option value="6908bfaf-8cf2-4fda-8c46-03f892d82e06">Cute Animal Characters</option>
+          <option value="e5a291b6-3990-495a-b1fa-7bd1864510a6">Pixel Art</option>
+          <option value="ab200606-5d09-4e1e-9050-0b05b839e944">Isometric Fantasy</option>
+          <option value="17e4edbf-690b-425d-a466-53c816f0de8a">Vintage Style Photography</option>
+          <option value="5fdadebb-17ae-472c-bf76-877e657f97de">Spirit Creatures</option>
+          <option value="50c4f43b-f086-4838-bcac-820406244cec">Cute Characters</option>
+        </select>
+
+        <label for="sd_version">SD Version</label>
+        <select name="sd_version" id="sd_version">
+          <option value="v1_5">v1_5</option>
+          <option value="v2">v2</option>
+        </select>
+
+        <label for="num_images">Number of Images</label>
+        <input name="num_images" id="num_images" type="number" placeholder="Enter the number of images" min="1" value="1">
+
+        <label for="presetStyle">Preset Style</label>
+        <select name="presetStyle" id="presetStyle">
+          <option value="LEONARDO">LEONARDO</option>
+          <option value="NONE">NONE</option>
+        </select>
+
+        <button type="submit">Generate</button>
+      </form>
+    </aside>
+
+    <main class="main">
+      <div class="card" id="output">
+        <!-- Initial preset image before AJAX request -->
+        <img src="https://i.imgur.com/65TZzu3.png" alt="Generated Image" style="width:512px; height: 512px;" />
+      </div>
+    </main>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="loading" id="loading">
+    <i class="iconfont icon-loading icon-spin"></i>
+    <p style="color: #000;">Loading...</p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script>
+    // JavaScript code (including existing code)
+    const menuIconEl = $('.menu-icon');
+    const sidenavEl = $('.sidenav');
+    const sidenavCloseEl = $('.sidenav__close-icon');
+
+    // Add and remove provided class names
+    function toggleClassName(el, className) {
+      if (el.hasClass(className)) {
+        el.removeClass(className);
+      } else {
+        el.addClass(className);
+      }
+    }
+
+    // Open the side nav on click
+    menuIconEl.on('click', function() {
+      toggleClassName(sidenavEl, 'active');
+    });
+
+    // Close the side nav on click
+    sidenavCloseEl.on('click', function() {
+      toggleClassName(sidenavEl, 'active');
+    });
+
+    // Show the overlay during loading
+    function showOverlay() {
+      $("#overlay").css("display", "block");
+    }
+
+    // Hide the overlay after loading
+    function hideOverlay() {
+      $("#overlay").css("display", "none");
+    }
+
+    // Handle form submission and AJAX request
+    $("#form").on('submit', function(event) {
+      event.preventDefault();
+
+      showOverlay(); // Show the overlay during loading
+      $(".loading").css("display", "block"); // Show the loading animation
+
+      $.ajax({
+        url: 'getPictures.php',
+        type: 'POST',
+        data: $("#form").serialize(),
+        dataType: 'json',
+        success: function (response) {
+          hideOverlay(); // Hide the overlay when the response is received
+          $(".loading").css("display", "none"); // Hide the loading animation
+
+          if (response.error) {
+            $("#output").html(`<p>Error: ${response.error}</p>`);
+          } else {
+            $("#output").html(`<p>Generation ID: ${response.generationId}</p>`);
+            response.images.map(url => {
+              $("#output").append(`<img src=${url} alt="Generated Image" />`);
+            });
+          }
+        },
+        error: function () {
+          hideOverlay(); // Hide the overlay on AJAX error
+          $(".loading").css("display", "none"); // Hide the loading animation
+          $("#output").html(`<p>Error occurred during AJAX request.</p>`);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
