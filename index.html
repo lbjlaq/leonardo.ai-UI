@@ -130,6 +130,36 @@
       border-radius: 5px;
       cursor: pointer;
     }
+    
+    /* Styles for the Main Section */
+    .main {
+      grid-area: main;
+      background-color: #444654; /* Updated color */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Styles for the Card */
+    .card {
+      width: 100%; /* Set the width to 60% */
+      display: flex;
+      flex-direction: column; /* Stack elements vertically */
+      align-items: center;
+
+    }
+
+    .card img {
+      width: 50%; /* Set the image width to 100% to fit inside the card */
+      height: auto; /* Maintain the aspect ratio of the image */
+      display: block; /* Remove any extra spacing around the image */
+    }
+    
+    /* Styles for the Generation ID */
+    .generation-id {
+      margin: 10px 0;
+      font-size: 16px;
+    }
 
     /* Styles for the Loading Overlay */
     .overlay {
@@ -258,7 +288,7 @@
     <main class="main">
       <div class="card" id="output">
         <!-- Initial preset image before AJAX request -->
-        <img src="https://i.imgur.com/65TZzu3.png" alt="Generated Image" style="width:512px; height: 512px;" />
+        <img src="https://i.imgur.com/65TZzu3.png" alt="Generated Image"  />
       </div>
     </main>
   </div>
